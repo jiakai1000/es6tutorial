@@ -34,7 +34,19 @@ s2.toString() // "Symbol(bar)"
 
 上面代码中，`s1`和`s2`是两个Symbol值。如果不加参数，它们在控制台的输出都是`Symbol()`，不利于区分。有了参数以后，就等于为它们加上了描述，输出的时候就能够分清，到底是哪一个值。
 
-注意，`Symbol`函数的参数只是表示对当前Symbol值的描述，因此相同参数的`Symbol`函数的返回值是不相等的。
+如果 Symbol 的参数是一个对象，就会调用该对象的`toString`方法，将其转为字符串，然后才生成一个 Symbol 值。
+
+```javascript
+const obj = {
+  toString() {
+    return 'abc';
+  }
+};
+const sym = Symbol(obj);
+sym // Symbol(abc)
+```
+
+注意，`Symbol`函数的参数只是表示对当前 Symbol 值的描述，因此相同参数的`Symbol`函数的返回值是不相等的。
 
 ```javascript
 // 没有参数的情况
@@ -44,8 +56,8 @@ var s2 = Symbol();
 s1 === s2 // false
 
 // 有参数的情况
-var s1 = Symbol("foo");
-var s2 = Symbol("foo");
+var s1 = Symbol('foo');
+var s2 = Symbol('foo');
 
 s1 === s2 // false
 ```
@@ -154,7 +166,7 @@ Symbol类型还可以用于定义一组常量，保证这组常量的值都是�
 log.levels = {
   DEBUG: Symbol('debug'),
   INFO: Symbol('info'),
-  WARN: Symbol('warn'),
+  WARN: Symbol('warn')
 };
 log(log.levels.DEBUG, 'debug message');
 log(log.levels.INFO, 'info message');
@@ -239,14 +251,14 @@ const shapeType = {
 
 ## 属性名的遍历
 
-Symbol作为属性名，该属性不会出现在`for...in`、`for...of`循环中，也不会被`Object.keys()`、`Object.getOwnPropertyNames()`返回。但是，它也不是私有属性，有一个`Object.getOwnPropertySymbols`方法，可以获取指定对象的所有Symbol属性名。
+Symbol 作为属性名，该属性不会出现在`for...in`、`for...of`循环中，也不会被`Object.keys()`、`Object.getOwnPropertyNames()`、`JSON.stringify()`返回。但是，它也不是私有属性，有一个`Object.getOwnPropertySymbols`方法，可以获取指定对象的所有 Symbol 属性名。
 
-`Object.getOwnPropertySymbols`方法返回一个数组，成员是当前对象的所有用作属性名的Symbol值。
+`Object.getOwnPropertySymbols`方法返回一个数组，成员是当前对象的所有用作属性名的 Symbol 值。
 
 ```javascript
 var obj = {};
 var a = Symbol('a');
-var b = Symbol.for('b');
+var b = Symbol('b');
 
 obj[a] = 'Hello';
 obj[b] = 'World';
@@ -281,7 +293,7 @@ Object.getOwnPropertySymbols(obj)
 
 上面代码中，使用`Object.getOwnPropertyNames`方法得不到`Symbol`属性名，需要使用`Object.getOwnPropertySymbols`方法。
 
-另一个新的API，`Reflect.ownKeys`方法可以返回所有类型的键名，包括常规键名和Symbol键名。
+另一个新的API，`Reflect.ownKeys`方法可以返回所有类型的键名，包括常规键名和 Symbol 键名。
 
 ```javascript
 let obj = {
@@ -291,10 +303,10 @@ let obj = {
 };
 
 Reflect.ownKeys(obj)
-// [Symbol(my_key), 'enum', 'nonEnum']
+//  ["enum", "nonEnum", Symbol(my_key)]
 ```
 
-由于以Symbol值作为名称的属性，不会被常规方法遍历得到。我们可以利用这个特性，为对象定义一些非私有的、但又希望只用于内部的方法。
+由于以 Symbol 值作为名称的属性，不会被常规方法遍历得到。我们可以利用这个特性，为对象定义一些非私有的、但又希望只用于内部的方法。
 
 ```javascript
 var size = Symbol('size');
@@ -325,7 +337,7 @@ Object.getOwnPropertyNames(x) // ['0']
 Object.getOwnPropertySymbols(x) // [Symbol(size)]
 ```
 
-上面代码中，对象x的size属性是一个Symbol值，所以`Object.keys(x)`、`Object.getOwnPropertyNames(x)`都无法获取它。这就造成了一种非私有的内部方法的效果。
+上面代码中，对象`x`的`size`属性是一个 Symbol 值，所以`Object.keys(x)`、`Object.getOwnPropertyNames(x)`都无法获取它。这就造成了一种非私有的内部方法的效果。
 
 ## Symbol.for()，Symbol.keyFor()
 
@@ -338,9 +350,9 @@ var s2 = Symbol.for('foo');
 s1 === s2 // true
 ```
 
-上面代码中，s1和s2都是Symbol值，但是它们都是同样参数的`Symbol.for`方法生成的，所以实际上是同一个值。
+上面代码中，`s1`和`s2`都是 Symbol 值，但是它们都是同样参数的`Symbol.for`方法生成的，所以实际上是同一个值。
 
-`Symbol.for()`与`Symbol()`这两种写法，都会生成新的Symbol。它们的区别是，前者会被登记在全局环境中供搜索，后者不会。`Symbol.for()`不会每次调用就返回一个新的Symbol类型的值，而是会先检查给定的key是否已经存在，如果不存在才会新建一个值。比如，如果你调用`Symbol.for("cat")`30次，每次都会返回同一个Symbol值，但是调用`Symbol("cat")`30次，会返回30个不同的Symbol值。
+`Symbol.for()`与`Symbol()`这两种写法，都会生成新的Symbol。它们的区别是，前者会被登记在全局环境中供搜索，后者不会。`Symbol.for()`不会每次调用就返回一个新的 Symbol 类型的值，而是会先检查给定的`key`是否已经存在，如果不存在才会新建一个值。比如，如果你调用`Symbol.for("cat")`30次，每次都会返回同一个 Symbol 值，但是调用`Symbol("cat")`30次，会返回30个不同的Symbol值。
 
 ```javascript
 Symbol.for("bar") === Symbol.for("bar")
@@ -352,7 +364,7 @@ Symbol("bar") === Symbol("bar")
 
 上面代码中，由于`Symbol()`写法没有登记机制，所以每次调用都会返回一个不同的值。
 
-Symbol.keyFor方法返回一个已登记的Symbol类型值的key。
+`Symbol.keyFor`方法返回一个已登记的 Symbol 类型值的`key`。
 
 ```javascript
 var s1 = Symbol.for("foo");
@@ -364,7 +376,7 @@ Symbol.keyFor(s2) // undefined
 
 上面代码中，变量`s2`属于未登记的Symbol值，所以返回`undefined`。
 
-需要注意的是，`Symbol.for`为Symbol值登记的名字，是全局环境的，可以在不同的iframe或service worker中取到同一个值。
+需要注意的是，`Symbol.for`为Symbol值登记的名字，是全局环境的，可以在不同的 iframe 或 service worker 中取到同一个值。
 
 ```javascript
 iframe = document.createElement('iframe');
@@ -375,7 +387,81 @@ iframe.contentWindow.Symbol.for('foo') === Symbol.for('foo')
 // true
 ```
 
-上面代码中，iframe窗口生成的Symbol值，可以在主页面得到。
+上面代码中，iframe 窗口生成的 Symbol 值，可以在主页面得到。
+
+## 实例：模块的 Singleton 模式
+
+Singleton模式指的是调用一个类，任何时候返回的都是同一个实例。
+
+对于Node来说，模块文件可以看成是一个类。怎么保证每次执行这个模块文件，返回的都是同一个实例呢？
+
+很容易想到，可以把实例放到顶层对象`global`。
+
+```javascript
+// mod.js
+function A() {
+  this.foo = 'hello';
+}
+
+if (!global._foo) {
+  global._foo = new A();
+}
+
+module.exports = global._foo;
+```
+
+然后，加载上面的`mod.js`。
+
+```javascript
+var a = require('./mod.js');
+console.log(a.foo);
+```
+
+上面代码中，变量`a`任何时候加载的都是`A`的同一个实例。
+
+但是，这里有一个问题，全局变量`global._foo`是可写的，任何文件都可以修改。
+
+```javascript
+var a = require('./mod.js');
+global._foo = 123;
+```
+
+上面的代码，会使得别的脚本加载`mod.js`都失真。
+
+为了防止这种情况出现，我们就可以使用Symbol。
+
+```javascript
+// mod.js
+const FOO_KEY = Symbol.for('foo');
+
+function A() {
+  this.foo = 'hello';
+}
+
+if (!global[FOO_KEY]) {
+  global[FOO_KEY] = new A();
+}
+
+module.exports = global[FOO_KEY];
+```
+
+上面代码中，可以保证`global[FOO_KEY]`不会被无意间覆盖，但还是可以被改写。
+
+```javascript
+var a = require('./mod.js');
+global[Symbol.for('foo')] = 123;
+```
+
+如果键名使用`Symbol`方法生成，那么外部将无法引用这个值，当然也就无法改写。
+
+```javascript
+// mod.js
+const FOO_KEY = Symbol('foo');
+
+// 后面代码相同 ……
+```
+
+上面代码将导致其他脚本都无法引用`FOO_KEY`。但这样也有一个问题，就是如果多次执行这个脚本，每次得到的`FOO_KEY`都是不一样的。虽然Node会将脚本的执行结果缓存，一般情况下，不会多次执行同一个脚本，但是用户可以手动清除缓存，所以也不是完全可靠。
 
 ## 内置的Symbol值
 
@@ -383,7 +469,7 @@ iframe.contentWindow.Symbol.for('foo') === Symbol.for('foo')
 
 ### Symbol.hasInstance
 
-对象的`Symbol.hasInstance`属性，指向一个内部方法。该对象使用`instanceof`运算符时，会调用这个方法，判断该对象是否为某个构造函数的实例。比如，`foo instanceof Foo`在语言内部，实际调用的是`Foo[Symbol.hasInstance](foo)`。
+对象的`Symbol.hasInstance`属性，指向一个内部方法。当其他对象使用`instanceof`运算符，判断是否为该对象的实例时，会调用这个方法。比如，`foo instanceof Foo`在语言内部，实际调用的是`Foo[Symbol.hasInstance](foo)`。
 
 ```javascript
 class MyClass {
@@ -391,8 +477,24 @@ class MyClass {
     return foo instanceof Array;
   }
 }
-var o = new MyClass();
-o instanceof Array // false
+
+[1, 2, 3] instanceof new MyClass() // true
+```
+
+上面代码中，`MyClass`是一个类，`new MyClass()`会返回一个实例。该实例的`Symbol.hasInstance`方法，会在进行`instanceof`运算时自动调用，判断左侧的运算子是否为`Array`的实例。
+
+下面是另一个例子。
+
+```javascript
+class Even {
+  static [Symbol.hasInstance](obj) {
+    return Number(obj) % 2 === 0;
+  }
+}
+
+1 instanceof Even // false
+2 instanceof Even // true
+12345 instanceof Even // false
 ```
 
 ### Symbol.isConcatSpreadable
@@ -402,13 +504,14 @@ o instanceof Array // false
 ```javascript
 let arr1 = ['c', 'd'];
 ['a', 'b'].concat(arr1, 'e') // ['a', 'b', 'c', 'd', 'e']
+arr1[Symbol.isConcatSpreadable] // undefined
 
 let arr2 = ['c', 'd'];
 arr2[Symbol.isConcatSpreadable] = false;
 ['a', 'b'].concat(arr2, 'e') // ['a', 'b', ['c','d'], 'e']
 ```
 
-上面代码说明，数组的`Symbol.isConcatSpreadable`属性默认为`true`，表示可以展开。
+上面代码说明，数组的默认行为是可以展开。`Symbol.isConcatSpreadable`属性等于`true`或`undefined`，都有这个效果。
 
 类似数组的对象也可以展开，但它的`Symbol.isConcatSpreadable`属性默认为`false`，必须手动打开。
 
@@ -420,17 +523,19 @@ obj[Symbol.isConcatSpreadable] = true;
 ['a', 'b'].concat(obj, 'e') // ['a', 'b', 'c', 'd', 'e']
 ```
 
-对于一个类来说，`Symbol.isConcatSpreadable`属性必须写成一个返回布尔值的方法。
+对于一个类来说，`Symbol.isConcatSpreadable`属性必须写成实例的属性。
 
 ```javascript
 class A1 extends Array {
-  [Symbol.isConcatSpreadable]() {
-    return true;
+  constructor(args) {
+    super(args);
+    this[Symbol.isConcatSpreadable] = true;
   }
 }
 class A2 extends Array {
-  [Symbol.isConcatSpreadable]() {
-    return false;
+  constructor(args) {
+    super(args);
+    this[Symbol.isConcatSpreadable] = false;
   }
 }
 let a1 = new A1();
@@ -443,19 +548,43 @@ a2[1] = 6;
 // [1, 2, 3, 4, [5, 6]]
 ```
 
-上面代码中，类`A1`是可扩展的，类`A2`是不可扩展的，所以使用`concat`时有不一样的结果。
+上面代码中，类`A1`是可展开的，类`A2`是不可展开的，所以使用`concat`时有不一样的结果。
 
 ### Symbol.species
 
-对象的`Symbol.species`属性，指向一个方法。该对象作为构造函数创造实例时，会调用这个方法。即如果`this.constructor[Symbol.species]`存在，就会使用这个属性作为构造函数，来创造新的实例对象。
+对象的`Symbol.species`属性，指向当前对象的构造函数。创造实例时，默认会调用这个方法，即使用这个属性返回的函数当作构造函数，来创造新的实例对象。
 
-`Symbol.species`属性默认的读取器如下。
+```javascript
+class MyArray extends Array {
+  // 覆盖父类 Array 的构造函数
+  static get [Symbol.species]() { return Array; }
+}
+```
+
+上面代码中，子类`MyArray`继承了父类`Array`。创建`MyArray`的实例对象时，本来会调用它自己的构造函数（本例中被省略了），但是由于定义了`Symbol.species`属性，所以会使用这个属性返回的的函数，创建`MyArray`的实例。
+
+这个例子也说明，定义`Symbol.species`属性要采用`get`读取器。默认的`Symbol.species`属性等同于下面的写法。
 
 ```javascript
 static get [Symbol.species]() {
   return this;
 }
 ```
+
+下面是一个例子。
+
+```javascript
+class MyArray extends Array {
+  static get [Symbol.species]() { return Array; }
+}
+var a = new MyArray(1,2,3);
+var mapped = a.map(x => x * x);
+
+mapped instanceof MyArray // false
+mapped instanceof Array // true
+```
+
+上面代码中，由于构造函数被替换成了`Array`。所以，`mapped`对象不是`MyArray`的实例，而是`Array`的实例。
 
 ### Symbol.match
 
@@ -484,6 +613,17 @@ String.prototype.replace(searchValue, replaceValue)
 // 等同于
 searchValue[Symbol.replace](this, replaceValue)
 ```
+
+下面是一个例子。
+
+```javascript
+const x = {};
+x[Symbol.replace] = (...s) => console.log(s);
+
+'Hello'.replace(x, 'World') // ["Hello", "World"]
+```
+
+`Symbol.replace`方法会收到两个参数，第一个参数是`replace`方法正在作用的对象，上面例子是`Hello`，第二个参数是替换后的值，上面例子是`World`。
 
 ### Symbol.search
 
@@ -515,9 +655,53 @@ String.prototype.split(separator, limit)
 separator[Symbol.split](this, limit)
 ```
 
+下面是一个例子。
+
+```javascript
+class MySplitter {
+  constructor(value) {
+    this.value = value;
+  }
+  [Symbol.split](string) {
+    var index = string.indexOf(this.value);
+    if (index === -1) {
+      return string;
+    }
+    return [
+      string.substr(0, index),
+      string.substr(index + this.value.length)
+    ];
+  }
+}
+
+'foobar'.split(new MySplitter('foo'))
+// ['', 'bar']
+
+'foobar'.split(new MySplitter('bar'))
+// ['foo', '']
+
+'foobar'.split(new MySplitter('baz'))
+// 'foobar'
+```
+
+上面方法使用`Symbol.split`方法，重新定义了字符串对象的`split`方法的行为，
+
 ### Symbol.iterator
 
-对象的Symbol.iterator属性，指向该对象的默认遍历器方法，即该对象进行for...of循环时，会调用这个方法，返回该对象的默认遍历器，详细介绍参见《Iterator和for...of循环》一章。
+对象的`Symbol.iterator`属性，指向该对象的默认遍历器方法。
+
+```javascript
+var myIterable = {};
+myIterable[Symbol.iterator] = function* () {
+  yield 1;
+  yield 2;
+  yield 3;
+};
+
+[...myIterable] // [1, 2, 3]
+```
+
+对象进行`for...of`循环时，会调用`Symbol.iterator`方法，返回该对象的默认遍历器，详细介绍参见《Iterator和for...of循环》一章。
 
 ```javascript
 class Collection {
@@ -569,18 +753,20 @@ let obj = {
 
 2 * obj // 246
 3 + obj // '3default'
-obj === 'default' // true
+obj == 'default' // true
 String(obj) // 'str'
 ```
 
 ### Symbol.toStringTag
 
-对象的`Symbol.toStringTag`属性，指向一个方法。在该对象上面调用`Object.prototype.toString`方法时，如果这个属性存在，它的返回值会出现在`toString`方法返回的字符串之中，表示对象的类型。也就是说，这个属性可以用来定制`[object Object]`或`[object Array]`中object后面的那个字符串。
+对象的`Symbol.toStringTag`属性，指向一个方法。在该对象上面调用`Object.prototype.toString`方法时，如果这个属性存在，它的返回值会出现在`toString`方法返回的字符串之中，表示对象的类型。也就是说，这个属性可以用来定制`[object Object]`或`[object Array]`中`object`后面的那个字符串。
 
 ```javascript
+// 例一
 ({[Symbol.toStringTag]: 'Foo'}.toString())
 // "[object Foo]"
 
+// 例二
 class Collection {
   get [Symbol.toStringTag]() {
     return 'xxx';

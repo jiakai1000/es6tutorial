@@ -20,7 +20,7 @@ Iterator的遍历过程是这样的。
 
 每一次调用`next`方法，都会返回数据结构的当前成员的信息。具体来说，就是返回一个包含`value`和`done`两个属性的对象。其中，`value`属性是当前成员的值，`done`属性是一个布尔值，表示遍历是否结束。
 
-下面是一个模拟next方法返回值的例子。
+下面是一个模拟`next`方法返回值的例子。
 
 ```javascript
 var it = makeIterator(['a', 'b']);
@@ -29,15 +29,15 @@ it.next() // { value: "a", done: false }
 it.next() // { value: "b", done: false }
 it.next() // { value: undefined, done: true }
 
-function makeIterator(array){
+function makeIterator(array) {
   var nextIndex = 0;
   return {
-    next: function(){
+    next: function() {
       return nextIndex < array.length ?
         {value: array[nextIndex++], done: false} :
         {value: undefined, done: true};
     }
-  }
+  };
 }
 ```
 
@@ -52,15 +52,15 @@ function makeIterator(array){
 对于遍历器对象来说，`done: false`和`value: undefined`属性都是可以省略的，因此上面的`makeIterator`函数可以简写成下面的形式。
 
 ```javascript
-function makeIterator(array){
+function makeIterator(array) {
   var nextIndex = 0;
   return {
-    next: function(){
+    next: function() {
       return nextIndex < array.length ?
         {value: array[nextIndex++]} :
         {done: true};
     }
-  }
+  };
 }
 ```
 
@@ -74,14 +74,14 @@ it.next().value // '1'
 it.next().value // '2'
 // ...
 
-function idMaker(){
+function idMaker() {
   var index = 0;
 
   return {
-    next: function(){
+    next: function() {
       return {value: index++, done: false};
     }
-  }
+  };
 }
 ```
 
@@ -110,7 +110,26 @@ interface IterationResult {
 
 Iterator接口的目的，就是为所有数据结构，提供了一种统一的访问机制，即`for...of`循环（详见下文）。当使用`for...of`循环遍历某种数据结构时，该循环会自动去寻找Iterator接口。
 
-ES6规定，默认的Iterator接口部署在数据结构的`Symbol.iterator`属性，或者说，一个数据结构只要具有`Symbol.iterator`属性，就可以认为是“可遍历的”（iterable）。调用`Symbol.iterator`方法，就会得到当前数据结构默认的遍历器生成函数。`Symbol.iterator`本身是一个表达式，返回Symbol对象的iterator属性，这是一个预定义好的、类型为Symbol的特殊值，所以要放在方括号内（请参考Symbol一章）。
+一种数据结构只要部署了Iterator接口，我们就称这种数据结构是”可遍历的“（iterable）。
+
+ES6规定，默认的Iterator接口部署在数据结构的`Symbol.iterator`属性，或者说，一个数据结构只要具有`Symbol.iterator`属性，就可以认为是“可遍历的”（iterable）。`Symbol.iterator`属性本身是一个函数，就是当前数据结构默认的遍历器生成函数。执行这个函数，就会返回一个遍历器。至于属性名`Symbol.iterator`，它是一个表达式，返回`Symbol`对象的`iterator`属性，这是一个预定义好的、类型为Symbol的特殊值，所以要放在方括号内。（参见Symbol一章）。
+
+```javascript
+const obj = {
+  [Symbol.iterator] : function () {
+    return {
+      next: function () {
+        return {
+          value: 1,
+          done: true
+        };
+      }
+    };
+  }
+};
+```
+
+上面代码中，对象`obj`是可遍历的（iterable），因为具有`Symbol.iterator`属性。执行这个属性，会返回一个遍历器对象。该对象的根本特征就是具有`next`方法。每次调用`next`方法，都会返回一个代表当前成员的信息对象，具有`value`和`done`两个属性。
 
 在ES6中，有三类数据结构原生具备Iterator接口：数组、某些类似数组的对象、Set和Map结构。
 
@@ -166,32 +185,30 @@ for (var value of range(0, 3)) {
 下面是通过遍历器实现指针结构的例子。
 
 ```javascript
-function Obj(value){
+function Obj(value) {
   this.value = value;
   this.next = null;
 }
 
-Obj.prototype[Symbol.iterator] = function(){
-
+Obj.prototype[Symbol.iterator] = function() {
   var iterator = {
     next: next
   };
 
   var current = this;
 
-  function next(){
-    if (current){
+  function next() {
+    if (current) {
       var value = current.value;
-      var done = current == null;
       current = current.next;
       return {
-        done: done,
+        done: false,
         value: value
-      }
+      };
     } else {
       return {
         done: true
-      }
+      };
     }
   }
   return iterator;
@@ -205,7 +222,7 @@ one.next = two;
 two.next = three;
 
 for (var i of one){
-  console.log(i)
+  console.log(i);
 }
 // 1
 // 2
@@ -480,7 +497,7 @@ function readLinesSync(file) {
 
 ```javascript
 for (let line of readLinesSync(fileName)) {
-  console.log(x);
+  console.log(line);
   break;
 }
 ```
@@ -491,28 +508,32 @@ for (let line of readLinesSync(fileName)) {
 
 ## for...of循环
 
-ES6借鉴C++、Java、C#和Python语言，引入了`for...of`循环，作为遍历所有数据结构的统一的方法。一个数据结构只要部署了`Symbol.iterator`属性，就被视为具有iterator接口，就可以用`for...of`循环遍历它的成员。也就是说，`for...of`循环内部调用的是数据结构的`Symbol.iterator`方法。
+ES6 借鉴 C++、Java、C# 和 Python 语言，引入了`for...of`循环，作为遍历所有数据结构的统一的方法。
 
-for...of循环可以使用的范围包括数组、Set和Map结构、某些类似数组的对象（比如arguments对象、DOM NodeList对象）、后文的Generator对象，以及字符串。
+一个数据结构只要部署了`Symbol.iterator`属性，就被视为具有iterator接口，就可以用`for...of`循环遍历它的成员。也就是说，`for...of`循环内部调用的是数据结构的`Symbol.iterator`方法。
+
+`for...of`循环可以使用的范围包括数组、Set 和 Map 结构、某些类似数组的对象（比如`arguments`对象、DOM NodeList 对象）、后文的 Generator 对象，以及字符串。
 
 ### 数组
 
-数组原生具备iterator接口，`for...of`循环本质上就是调用这个接口产生的遍历器，可以用下面的代码证明。
+数组原生具备`iterator`接口（即默认部署了`Symbol.iterator`属性），`for...of`循环本质上就是调用这个接口产生的遍历器，可以用下面的代码证明。
 
 ```javascript
 const arr = ['red', 'green', 'blue'];
-let iterator  = arr[Symbol.iterator]();
 
 for(let v of arr) {
   console.log(v); // red green blue
 }
 
-for(let v of iterator) {
+const obj = {};
+obj[Symbol.iterator] = arr[Symbol.iterator].bind(arr);
+
+for(let v of obj) {
   console.log(v); // red green blue
 }
 ```
 
-上面代码的`for...of`循环的两种写法是等价的。
+上面代码中，空对象`obj`部署了数组`arr`的`Symbol.iterator`属性，结果`obj`的`for...of`循环，产生了与`arr`完全一样的结果。
 
 `for...of`循环可以代替数组实例的`forEach`方法。
 
@@ -687,14 +708,14 @@ var es6 = {
   standard: "ECMA-262"
 };
 
-for (e in es6) {
+for (let e in es6) {
   console.log(e);
 }
 // edition
 // committee
 // standard
 
-for (e of es6) {
+for (let e of es6) {
   console.log(e);
 }
 // TypeError: es6 is not iterable

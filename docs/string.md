@@ -21,9 +21,9 @@ JavaScript允许采用`\uxxxx`形式表示一个字符，其中“xxxx”表示�
 // " 7"
 ```
 
-上面代码表示，如果直接在“\u”后面跟上超过`0xFFFF`的数值（比如`\u20BB7`），JavaScript会理解成“\u20BB+7”。由于`\u20BB`是一个不可打印字符，所以只会显示一个空格，后面跟着一个7。
+上面代码表示，如果直接在`\u`后面跟上超过`0xFFFF`的数值（比如`\u20BB7`），JavaScript会理解成`\u20BB+7`。由于`\u20BB`是一个不可打印字符，所以只会显示一个空格，后面跟着一个`7`。
 
-ES6对这一点做出了改进，只要将码点放入大括号，就能正确解读该字符。
+ES6 对这一点做出了改进，只要将码点放入大括号，就能正确解读该字符。
 
 ```javascript
 "\u{20BB7}"
@@ -53,7 +53,7 @@ hell\u{6F} // 123
 
 ## codePointAt()
 
-JavaScript内部，字符以UTF-16的格式储存，每个字符固定为2个字节。对于那些需要4个字节储存的字符（Unicode码点大于0xFFFF的字符），JavaScript会认为它们是两个字符。
+JavaScript内部，字符以UTF-16的格式储存，每个字符固定为`2`个字节。对于那些需要`4`个字节储存的字符（Unicode码点大于`0xFFFF`的字符），JavaScript会认为它们是两个字符。
 
 ```javascript
 var s = "𠮷";
@@ -65,7 +65,7 @@ s.charCodeAt(0) // 55362
 s.charCodeAt(1) // 57271
 ```
 
-上面代码中，汉字“𠮷”的码点是`0x20BB7`，UTF-16编码为`0xD842 0xDFB7`（十进制为55362 57271），需要4个字节储存。对于这种4个字节的字符，JavaScript不能正确处理，字符串长度会误判为2，而且`charAt`方法无法读取整个字符，`charCodeAt`方法只能分别返回前两个字节和后两个字节的值。
+上面代码中，汉字“𠮷”（注意，这个字不是”吉祥“的”吉“）的码点是`0x20BB7`，UTF-16编码为`0xD842 0xDFB7`（十进制为`55362 57271`），需要`4`个字节储存。对于这种`4`个字节的字符，JavaScript不能正确处理，字符串长度会误判为`2`，而且`charAt`方法无法读取整个字符，`charCodeAt`方法只能分别返回前两个字节和后两个字节的值。
 
 ES6提供了`codePointAt`方法，能够正确处理4个字节储存的字符，返回一个字符的码点。
 
@@ -75,7 +75,7 @@ var s = '𠮷a';
 s.codePointAt(0) // 134071
 s.codePointAt(1) // 57271
 
-s.charCodeAt(2) // 97
+s.codePointAt(2) // 97
 ```
 
 `codePointAt`方法的参数，是字符在字符串中的位置（从0开始）。上面代码中，JavaScript将“𠮷a”视为三个字符，codePointAt方法在第一个字符上，正确地识别了“𠮷”，返回了它的十进制码点134071（即十六进制的`20BB7`）。在第二个字符（即“𠮷”的后两个字节）和第三个字符“a”上，`codePointAt`方法的结果与`charCodeAt`方法相同。
@@ -88,18 +88,18 @@ s.charCodeAt(2) // 97
 var s = '𠮷a';
 
 s.codePointAt(0).toString(16) // "20bb7"
-s.charCodeAt(2).toString(16) // "61"
+s.codePointAt(2).toString(16) // "61"
 ```
 
-你可能注意到了，`codePointAt`方法的参数，仍然是不正确的。比如，上面代码中，字符`a`在字符串`s`的正确位置序号应该是1，但是必须向`charCodeAt`方法传入2。解决这个问题的一个办法是使用`for...of`循环，因为它会正确识别32位的UTF-16字符。
+你可能注意到了，`codePointAt`方法的参数，仍然是不正确的。比如，上面代码中，字符`a`在字符串`s`的正确位置序号应该是1，但是必须向`codePointAt`方法传入2。解决这个问题的一个办法是使用`for...of`循环，因为它会正确识别32位的UTF-16字符。
 
 ```javascript
 var s = '𠮷a';
 for (let ch of s) {
   console.log(ch.codePointAt(0).toString(16));
 }
-// "20bb7"
-// ""
+// 20bb7
+// 61
 ```
 
 `codePointAt`方法是测试一个字符由两个字节还是由四个字节组成的最简单方法。
@@ -133,7 +133,7 @@ String.fromCodePoint(0x78, 0x1f680, 0x79) === 'x\uD83D\uDE80y'
 // true
 ```
 
-上面代码中，如果`String.fromCharCode`方法有多个参数，则它们会被合并成一个字符串返回。
+上面代码中，如果`String.fromCodePoint`方法有多个参数，则它们会被合并成一个字符串返回。
 
 注意，`fromCodePoint`方法定义在`String`对象上，而`codePointAt`方法定义在字符串的实例对象上。
 
@@ -180,16 +180,18 @@ ES5对字符串对象提供`charAt`方法，返回字符串给定位置的字符
 
 上面代码中，`charAt`方法返回的是UTF-16编码的第一个字节，实际上是无法显示的。
 
-ES7提供了字符串实例的`at`方法，可以识别Unicode编号大于`0xFFFF`的字符，返回正确的字符。Chrome浏览器已经支持该方法。
+目前，有一个提案，提出字符串实例的`at`方法，可以识别Unicode编号大于`0xFFFF`的字符，返回正确的字符。
 
 ```javascript
 'abc'.at(0) // "a"
 '𠮷'.at(0) // "𠮷"
 ```
 
+这个方法可以通过[垫片库](https://github.com/es-shims/String.prototype.at)实现。
+
 ## normalize()
 
-为了表示语调和重音符号，Unicode提供了两种方法。一种是直接提供带重音符号的字符，比如`Ǒ`（\u01D1）。另一种是提供合成符号（combining character），即原字符与重音符号的合成，两个字符合成一个字符，比如`O`（\u004F）和`ˇ`（\u030C）合成`Ǒ`（\u004F\u030C）。
+许多欧洲语言有语调符号和重音符号。为了表示它们，Unicode提供了两种方法。一种是直接提供带重音符号的字符，比如`Ǒ`（\u01D1）。另一种是提供合成符号（combining character），即原字符与重音符号的合成，两个字符合成一个字符，比如`O`（\u004F）和`ˇ`（\u030C）合成`Ǒ`（\u004F\u030C）。
 
 这两种表示方法，在视觉和语义上都等价，但是JavaScript不能识别。
 
@@ -209,7 +211,7 @@ ES6提供字符串实例的`normalize()`方法，用来将字符的不同表示�
 // true
 ```
 
-`normalize`方法可以接受四个参数。
+`normalize`方法可以接受一个参数来指定`normalize`的方式，参数的四个可选值如下。
 
 - `NFC`，默认参数，表示“标准等价合成”（Normalization Form Canonical Composition），返回多个简单字符的合成字符。所谓“标准等价”指的是视觉和语义上的等价。
 - `NFD`，表示“标准等价分解”（Normalization Form Canonical Decomposition），即在标准等价的前提下，返回合成字符分解的多个简单字符。
@@ -318,6 +320,13 @@ ES7推出了字符串补全长度的功能。如果某个字符串不够指定�
 'xxx'.padEnd(2, 'ab') // 'xxx'
 ```
 
+如果用来补全的字符串与原字符串，两者的长度之和超过了指定的最小长度，则会截去超出位数的补全字符串。
+
+```javascript
+'abc'.padStart(10, '0123456789')
+// '0123456abc'
+```
+
 如果省略第二个参数，则会用空格补全长度。
 
 ```javascript
@@ -325,23 +334,38 @@ ES7推出了字符串补全长度的功能。如果某个字符串不够指定�
 'x'.padEnd(4) // 'x   '
 ```
 
+`padStart`的常见用途是为数值补全指定位数。下面代码生成10位的数值字符串。
+
+```javascript
+'1'.padStart(10, '0') // "0000000001"
+'12'.padStart(10, '0') // "0000000012"
+'123456'.padStart(10, '0') // "0000123456"
+```
+
+另一个用途是提示字符串格式。
+
+```javascript
+'12'.padStart(10, 'YYYY-MM-DD') // "YYYY-MM-12"
+'09-12'.padStart(10, 'YYYY-MM-DD') // "YYYY-09-12"
+```
+
 ## 模板字符串
 
 传统的JavaScript语言，输出模板通常是这样写的。
 
 ```javascript
-$("#result").append(
-  "There are <b>" + basket.count + "</b> " +
-  "items in your basket, " +
-  "<em>" + basket.onSale +
-  "</em> are on sale!"
+$('#result').append(
+  'There are <b>' + basket.count + '</b> ' +
+  'items in your basket, ' +
+  '<em>' + basket.onSale +
+  '</em> are on sale!'
 );
 ```
 
 上面这种写法相当繁琐不方便，ES6引入了模板字符串解决这个问题。
 
 ```javascript
-$("#result").append(`
+$('#result').append(`
   There are <b>${basket.count}</b> items
    in your basket, <em>${basket.onSale}</em>
   are on sale!
@@ -366,7 +390,7 @@ var name = "Bob", time = "today";
 `Hello ${name}, how are you ${time}?`
 ```
 
-上面代码中的字符串，都是用反引号表示。如果在模板字符串中需要使用反引号，则前面要用反斜杠转义。
+上面代码中的模板字符串，都是用反引号表示。如果在模板字符串中需要使用反引号，则前面要用反斜杠转义。
 
 ```javascript
 var greeting = `\`Yo\` World!`;
@@ -375,11 +399,24 @@ var greeting = `\`Yo\` World!`;
 如果使用模板字符串表示多行字符串，所有的空格和缩进都会被保留在输出之中。
 
 ```javascript
-$("#warning").html(`
-  <h1>Watch out!</h1>
-  <p>Unauthorized hockeying can result in penalties
-  of up to ${maxPenalty} minutes.</p>
+$('#list').html(`
+<ul>
+  <li>first</li>
+  <li>second</li>
+</ul>
 `);
+```
+
+上面代码中，所有模板字符串的空格和换行，都是被保留的，比如`<ul>`标签前面会有一个换行。如果你不想要这个换行，可以使用`trim`方法消除它。
+
+
+```javascript
+$('#list').html(`
+<ul>
+  <li>first</li>
+  <li>second</li>
+</ul>
+`.trim());
 ```
 
 模板字符串中嵌入变量，需要将变量名写在`${}`之中。
@@ -444,7 +481,40 @@ var msg = `Hello, ${place}`;
 // "Hello World"
 ```
 
-如果需要引用模板字符串本身，可以像下面这样写。
+模板字符串甚至还能嵌套。
+
+```javascript
+const tmpl = addrs => `
+  <table>
+  ${addrs.map(addr => `
+    <tr><td>${addr.first}</td></tr>
+    <tr><td>${addr.last}</td></tr>
+  `).join('')}
+  </table>
+`;
+```
+
+上面代码中，模板字符串的变量之中，又嵌入了另一个模板字符串，使用方法如下。
+
+```javascript
+const data = [
+    { first: '<Jane>', last: 'Bond' },
+    { first: 'Lars', last: '<Croft>' },
+];
+
+console.log(tmpl(data));
+// <table>
+//
+//   <tr><td><Jane></td></tr>
+//   <tr><td>Bond</td></tr>
+//
+//   <tr><td>Lars</td></tr>
+//   <tr><td><Croft></td></tr>
+//
+// </table>
+```
+
+如果需要引用模板字符串本身，在需要时执行，可以像下面这样写。
 
 ```javascript
 // 写法一
@@ -465,7 +535,7 @@ func('Jack') // "Hello Jack!"
 ```javascript
 var template = `
 <ul>
-  <% for(var i=0; i < data.supplies.length; i++) {%>
+  <% for(var i=0; i < data.supplies.length; i++) { %>
     <li><%= data.supplies[i] %></li>
   <% } %>
 </ul>
@@ -566,13 +636,23 @@ div.innerHTML = parse({ supplies: [ "broom", "mop", "cleaner" ] });
 
 模板字符串的功能，不仅仅是上面这些。它可以紧跟在一个函数名后面，该函数将被调用来处理这个模板字符串。这被称为“标签模板”功能（tagged template）。
 
+```javascript
+alert`123`
+// 等同于
+alert(123)
+```
+
 标签模板其实不是模板，而是函数调用的一种特殊形式。“标签”指的就是函数，紧跟在后面的模板字符串就是它的参数。
+
+但是，如果模板字符里面有变量，就不是简单的调用了，而是会将模板字符串先处理成多个参数，再调用函数。
 
 ```javascript
 var a = 5;
 var b = 10;
 
 tag`Hello ${ a + b } world ${ a * b }`;
+// 等同于
+tag(['Hello ', ' world ', ''], 15, 50);
 ```
 
 上面代码中，模板字符串前面有一个标识名`tag`，它是一个函数。整个表达式的返回值，就是`tag`函数处理模板字符串后的返回值。
@@ -601,7 +681,7 @@ function tag(stringArr, ...values){
 - 第二个参数: 15
 - 第三个参数：50
 
-也就是说，`tag`数实际上以下面的形式调用。
+也就是说，`tag`函数实际上以下面的形式调用。
 
 ```javascript
 tag(['Hello ', ' world ', ''], 15, 50)
@@ -639,7 +719,7 @@ var total = 30;
 var msg = passthru`The total is ${total} (${total*1.05} with tax)`;
 
 function passthru(literals) {
-  var result = "";
+  var result = '';
   var i = 0;
 
   while (i < literals.length) {
@@ -694,7 +774,16 @@ function SaferHTML(templateData) {
 }
 ```
 
-上面代码中，经过`SaferHTML`函数处理，HTML字符串的特殊字符都会被转义。
+上面代码中，`sender`变量往往是用户提供的，经过`SaferHTML`函数处理，里面的特殊字符都会被转义。
+
+```javascript
+var sender = '<script>alert("abc")</script>'; // 恶意代码
+var message = SaferHTML`<p>${sender} has sent you a message.</p>`;
+
+message
+// <p>&lt;script&gt;alert("abc")&lt;/script&gt; has sent you a message.</p>
+```
+
 
 标签模板的另一个应用，就是多语言转换（国际化处理）。
 
@@ -749,6 +838,15 @@ HelloWorldApp.main();
 模板处理函数的第一个参数（模板字符串数组），还有一个`raw`属性。
 
 ```javascript
+console.log`123`
+// ["123", raw: Array[1]]
+```
+
+上面代码中，`console.log`接受的参数，实际上是一个数组。该数组有一个`raw`属性，保存的是转义后的原字符串。
+
+请看下面的例子。
+
+```javascript
 tag`First line\nSecond line`
 
 function tag(strings) {
@@ -757,7 +855,7 @@ function tag(strings) {
 }
 ```
 
-上面代码中，`tag`函数的第一个参数`strings`，有一个`raw`属性，也指向一个数组。该数组的成员与`strings`数组完全一致。比如，`strings`数组是`["First line\nSecond line"]`，那么`strings.raw`数组就是`["First line\\nSecond line"]`。两者唯一的区别，就是字符串里面的斜杠都被转义了。比如，strings.raw数组会将`\n`视为`\`和`n`两个字符，而不是换行符。这是为了方便取得转义之前的原始模板而设计的。
+上面代码中，`tag`函数的第一个参数`strings`，有一个`raw`属性，也指向一个数组。该数组的成员与`strings`数组完全一致。比如，`strings`数组是`["First line\nSecond line"]`，那么`strings.raw`数组就是`["First line\\nSecond line"]`。两者唯一的区别，就是字符串里面的斜杠都被转义了。比如，strings.raw数组会将`\n`视为`\\`和`n`两个字符，而不是换行符。这是为了方便取得转义之前的原始模板而设计的。
 
 ## String.raw()
 
@@ -804,4 +902,46 @@ String.raw({ raw: 'test' }, 0, 1, 2);
 
 // 等同于
 String.raw({ raw: ['t','e','s','t'] }, 0, 1, 2);
+```
+
+## 模板字符串的限制
+
+前面提到标签模板里面，可以内嵌其他语言。但是，模板字符串默认会将字符串转义，因此导致了无法嵌入其他语言。
+
+举例来说，在标签模板里面可以嵌入Latex语言。
+
+```javascript
+function latex(strings) {
+  // ...
+}
+
+let document = latex`
+\newcommand{\fun}{\textbf{Fun!}}  // 正常工作
+\newcommand{\unicode}{\textbf{Unicode!}} // 报错
+\newcommand{\xerxes}{\textbf{King!}} // 报错
+
+Breve over the h goes \u{h}ere // 报错
+`
+```
+
+上面代码中，变量`document`内嵌的模板字符串，对于Latex语言来说完全是合法的，但是JavaScript引擎会报错。原因就在于字符串的转义。
+
+模板字符串会将`\u00FF`和`\u{42}`当作Unicode字符进行转义，所以`\unicode`解析时报错；而`\x56`会被当作十六进制字符串转义，所以`\xerxes`会报错。
+
+为了解决这个问题，现在有一个[提案](https://tc39.github.io/proposal-template-literal-revision/)，放松对标签模板里面的字符串转义的限制。如果遇到不合法的字符串转义，就返回`undefined`，而不是报错，并且从`raw`属性上面可以得到原始字符串。
+
+```javascript
+function tag(strs) {
+  strs[0] === undefined
+  strs.raw[0] === "\\unicode and \\u{55}";
+}
+tag`\unicode and \u{55}`
+```
+
+上面代码中，模板字符串原本是应该报错的，但是由于放松了对字符串转义的限制，所以不报错了，JavaScript引擎将第一个字符设置为`undefined`，但是`raw`属性依然可以得到原始字符串，因此`tag`函数还是可以对原字符串进行处理。
+
+注意，这种对字符串转义的放松，只在标签模板解析字符串时生效，不是标签模板的场合，依然会报错。
+
+```javascript
+let bad = `bad escape sequence: \unicode`; // 报错
 ```
